@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSignOut } from "@/components/logout-button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -35,6 +36,9 @@ export function UserMenu({
           <div className="text-muted-foreground">{email}</div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings/security">Security</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={signOut}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

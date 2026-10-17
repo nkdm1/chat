@@ -27,11 +27,14 @@ export function SignInForm() {
   async function onSubmit(values: SignInValues) {
     setError(null);
     setUnverified(null);
-    const { error } = await authClient.signIn.email(values);
+    const { data, error } = await authClient.signIn.email(values);
     if (error?.code === "EMAIL_NOT_VERIFIED") {
       return setUnverified(values.email.trim().toLowerCase());
     }
     if (error) return setError(authErrorMessage(error));
+    if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {
+      return router.push("/two-factor");
+    }
     router.push("/chat");
     router.refresh();
   }
