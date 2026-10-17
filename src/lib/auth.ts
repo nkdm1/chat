@@ -44,7 +44,17 @@ export const auth = betterAuth({
   session: { expiresIn: 60 * 60 * 24, updateAge: 60 * 60 },
   advanced: { useSecureCookies: env.NODE_ENV === "production" },
   trustedOrigins: [env.BETTER_AUTH_URL],
-  rateLimit: { enabled: true, storage: "database" },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    // Endpoints that send mail or check secrets get a tighter budget.
+    customRules: {
+      "/request-password-reset": { window: 60, max: 3 },
+      "/send-verification-email": { window: 60, max: 3 },
+      "/two-factor/verify-totp": { window: 60, max: 10 },
+      "/two-factor/verify-backup-code": { window: 60, max: 10 },
+    },
+  },
   hooks: {
     // Authoritative server-side validation; the client schema is only for UX.
     before: createAuthMiddleware(async (ctx) => {
