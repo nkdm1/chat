@@ -1,3 +1,6 @@
-export default function Home() {
-  return <main className="p-6">chat</main>;
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+
+export default async function Home() {
+  redirect((await getSession()) ? "/chat" : "/sign-in");
 }

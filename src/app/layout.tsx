@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter_Tight } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -20,7 +21,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${interTight.variable} ${geistMono.variable}`}>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
