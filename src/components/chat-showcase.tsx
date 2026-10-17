@@ -1,10 +1,10 @@
 // Decorative preview of the app. Purely visual, hidden from assistive tech.
 
 const FRIENDS = [
-  { name: "Mia", online: true, unread: true, active: true },
-  { name: "Jonas", online: true, unread: false, active: false },
-  { name: "Ola", online: false, unread: false, active: false },
-  { name: "Kuba", online: false, unread: false, active: false },
+  { name: "Paweł", online: true, unread: true, active: true },
+  { name: "Nikodem", online: true, unread: false, active: false },
+  { name: "Szymon", online: false, unread: false, active: false },
+  { name: "Patryk", online: false, unread: false, active: false },
 ];
 
 const MESSAGES = [
@@ -66,9 +66,9 @@ export function ChatShowcase() {
 
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-center gap-2.5 border-b px-4 py-3">
-              <Avatar name="Mia" online />
+              <Avatar name="Paweł" online />
               <div className="leading-tight">
-                <p className="text-sm font-medium">Mia</p>
+                <p className="text-sm font-medium">Paweł</p>
                 <p className="text-xs text-muted-foreground">online</p>
               </div>
             </div>
