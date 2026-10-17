@@ -143,3 +143,118 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Chat preview on the auth pages: one 16s loop, messages arrive in order. */
+@keyframes msg-1 {
+  0%,
+  3% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  7%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes msg-2 {
+  0%,
+  19% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  23%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes msg-3 {
+  0%,
+  35% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  39%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes msg-4 {
+  0%,
+  51% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  55%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes msg-5 {
+  0%,
+  66% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  70%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@utility animate-msg-1 {
+  animation: msg-1 16s ease-out infinite;
+}
+@utility animate-msg-2 {
+  animation: msg-2 16s ease-out infinite;
+}
+@utility animate-msg-3 {
+  animation: msg-3 16s ease-out infinite;
+}
+@utility animate-msg-4 {
+  animation: msg-4 16s ease-out infinite;
+}
+@utility animate-msg-5 {
+  animation: msg-5 16s ease-out infinite;
+}
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Show the finished conversation instead of an empty window. */
+  [data-msg] {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

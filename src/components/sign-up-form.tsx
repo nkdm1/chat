@@ -18,13 +18,15 @@ export function SignUpForm() {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { username: "", email: "", password: "" },
+    defaultValues: { username: "", email: "", password: "", confirm: "" },
   });
 
   async function onSubmit(values: SignUpValues) {
     setError(null);
     const { error } = await authClient.signUp.email({
-      ...values,
+      username: values.username,
+      email: values.email,
+      password: values.password,
       name: values.username,
       callbackURL: "/verify-email",
     });
@@ -71,6 +73,13 @@ export function SignUpForm() {
           control={form.control}
           name="password"
           label="Password"
+          type="password"
+          autoComplete="new-password"
+        />
+        <TextField
+          control={form.control}
+          name="confirm"
+          label="Repeat password"
           type="password"
           autoComplete="new-password"
         />

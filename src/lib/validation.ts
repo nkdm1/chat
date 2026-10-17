@@ -15,11 +15,20 @@ export const newPasswordSchema = z
   .min(12, "At least 12 characters")
   .max(128, "At most 128 characters");
 
-export const signUpSchema = z.object({
+/** What the API accepts; also used by the server-side sign-up hook. */
+export const signUpApiSchema = z.object({
   username: usernameSchema,
   email: emailSchema,
   password: newPasswordSchema,
 });
+
+/** The sign-up form: same fields plus a repeated password (UI only). */
+export const signUpSchema = signUpApiSchema
+  .extend({ confirm: z.string() })
+  .refine((v) => v.password === v.confirm, {
+    path: ["confirm"],
+    message: "Passwords don't match",
+  });
 
 export const signInSchema = z.object({
   email: emailSchema,

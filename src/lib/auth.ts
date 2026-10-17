@@ -9,7 +9,7 @@ import * as schema from "@/db/schema";
 import { sendMailInBackground } from "@/lib/email";
 import { resetPasswordEmail, verificationEmail } from "@/lib/email-templates";
 import { env } from "@/lib/env";
-import { signUpSchema } from "@/lib/validation";
+import { signUpApiSchema } from "@/lib/validation";
 
 export const auth = betterAuth({
   appName: "chat",
@@ -65,7 +65,7 @@ export const auth = betterAuth({
     // Authoritative server-side validation; the client schema is only for UX.
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/sign-up/email") return;
-      const parsed = signUpSchema.safeParse(ctx.body);
+      const parsed = signUpApiSchema.safeParse(ctx.body);
       if (!parsed.success) {
         throw new APIError("BAD_REQUEST", {
           code: "VALIDATION_ERROR",

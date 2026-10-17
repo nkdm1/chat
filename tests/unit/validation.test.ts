@@ -3,6 +3,7 @@ import { authErrorMessage } from "@/lib/auth-errors";
 import {
   resetPasswordSchema,
   signInSchema,
+  signUpApiSchema,
   signUpSchema,
 } from "@/lib/validation";
 
@@ -12,9 +13,9 @@ const valid = {
   password: "correct-horse-battery",
 };
 
-describe("signUpSchema", () => {
+describe("signUpApiSchema", () => {
   it("accepts valid input and normalizes it", () => {
-    const parsed = signUpSchema.parse({
+    const parsed = signUpApiSchema.parse({
       ...valid,
       username: " Ann_1 ",
       email: "ANN@Example.com",
@@ -31,9 +32,20 @@ describe("signUpSchema", () => {
     ["short password", { password: "short" }],
     ["long password", { password: "x".repeat(129) }],
   ])("rejects %s", (_, override) => {
-    expect(signUpSchema.safeParse({ ...valid, ...override }).success).toBe(
+    expect(signUpApiSchema.safeParse({ ...valid, ...override }).success).toBe(
       false,
     );
+  });
+});
+
+describe("signUpSchema (form)", () => {
+  it("requires the repeated password to match", () => {
+    expect(
+      signUpSchema.safeParse({ ...valid, confirm: "different" }).success,
+    ).toBe(false);
+    expect(
+      signUpSchema.safeParse({ ...valid, confirm: valid.password }).success,
+    ).toBe(true);
   });
 });
 
