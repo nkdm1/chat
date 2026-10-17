@@ -28,3 +28,15 @@ export const signInSchema = z.object({
 
 export type SignUpValues = z.input<typeof signUpSchema>;
 export type SignInValues = z.input<typeof signInSchema>;
+
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+export const resetPasswordSchema = z
+  .object({ password: newPasswordSchema, confirm: z.string() })
+  .refine((v) => v.password === v.confirm, {
+    path: ["confirm"],
+    message: "Passwords don't match",
+  });
+
+export type ForgotPasswordValues = z.input<typeof forgotPasswordSchema>;
+export type ResetPasswordValues = z.input<typeof resetPasswordSchema>;

@@ -5,6 +5,8 @@ import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
+import { sendMailInBackground } from "@/lib/email";
+import { resetPasswordEmail, verificationEmail } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { signUpSchema } from "@/lib/validation";
 
@@ -17,6 +19,21 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
     maxPasswordLength: 128,
+    // Unverified users can't sign in; a new link is sent on each attempt.
+    requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 60 * 30, // single-use, 30 minutes
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      sendMailInBackground(resetPasswordEmail(user, url));
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24,
+    sendVerificationEmail: async ({ user, url }) => {
+      sendMailInBackground(verificationEmail(user, url));
+    },
   },
   user: {
     additionalFields: {

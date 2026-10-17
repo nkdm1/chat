@@ -6,8 +6,13 @@ import { redirectIfSignedIn } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reset?: string }>;
+}) {
   await redirectIfSignedIn();
+  const { reset } = await searchParams;
   return (
     <AuthShell
       title="Sign in"
@@ -23,6 +28,11 @@ export default async function SignInPage() {
         </>
       }
     >
+      {reset && (
+        <p className="animate-enter text-muted-foreground">
+          Password updated. Sign in with the new one.
+        </p>
+      )}
       <SignInForm />
     </AuthShell>
   );

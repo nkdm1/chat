@@ -1,10 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormAlert } from "@/components/form-alert";
+import { ResendVerification } from "@/components/resend-verification";
 import { Spinner } from "@/components/spinner";
 import { TextField } from "@/components/text-field";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ import { authErrorMessage } from "@/lib/auth-errors";
 import { type SignUpValues, signUpSchema } from "@/lib/validation";
 
 export function SignUpForm() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { username: "", email: "", password: "" },
@@ -26,10 +26,22 @@ export function SignUpForm() {
     const { error } = await authClient.signUp.email({
       ...values,
       name: values.username,
+      callbackURL: "/verify-email",
     });
     if (error) return setError(authErrorMessage(error));
-    router.push("/chat");
-    router.refresh();
+    setSentTo(values.email);
+  }
+
+  if (sentTo) {
+    return (
+      <div className="animate-enter space-y-4">
+        <p>
+          Check your inbox. We sent a link to{" "}
+          <span className="font-medium">{sentTo}</span>.
+        </p>
+        <ResendVerification email={sentTo} />
+      </div>
+    );
   }
 
   return (
