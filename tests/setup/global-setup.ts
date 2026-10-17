@@ -20,7 +20,8 @@ export default async function setup() {
   if (exists.length === 0) await admin.unsafe(`create database "${dbName}"`);
   await admin.end();
 
-  const client = postgres(url.toString(), { max: 1 });
+  // "already exists, skipping" notices are expected on re-runs.
+  const client = postgres(url.toString(), { max: 1, onnotice: () => {} });
   await migrate(drizzle(client), { migrationsFolder: "./drizzle" });
   await client.end();
 }

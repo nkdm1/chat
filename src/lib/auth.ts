@@ -15,6 +15,8 @@ export const auth = betterAuth({
   appName: "chat",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
+  // Tests trigger failures on purpose (bad password, foreign origin); keep output clean.
+  logger: { disabled: !!process.env.VITEST },
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: {
     enabled: true,

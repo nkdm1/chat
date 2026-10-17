@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormAlert } from "@/components/form-alert";
@@ -86,12 +87,19 @@ export function TwoFactorForm() {
         </form>
       )}
       <label className="flex items-center gap-2 text-muted-foreground">
-        <input
-          type="checkbox"
-          checked={trust}
-          onChange={(e) => setTrust(e.target.checked)}
-          className="size-4 accent-[var(--online)]"
-        />
+        <span className="relative inline-flex size-4 shrink-0">
+          <input
+            type="checkbox"
+            checked={trust}
+            onChange={(e) => setTrust(e.target.checked)}
+            className="peer size-4 cursor-pointer appearance-none rounded-[4px] border border-input bg-background transition-colors checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2"
+          />
+          <Check
+            aria-hidden
+            strokeWidth={3}
+            className="pointer-events-none absolute inset-0 m-auto size-3 text-primary-foreground opacity-0 transition-opacity peer-checked:opacity-100"
+          />
+        </span>
         Trust this device for 30 days
       </label>
       <button

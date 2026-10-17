@@ -38,8 +38,8 @@ export function SignUpForm() {
     return (
       <div className="animate-enter space-y-4">
         <p>
-          Check your inbox. We sent a link to{" "}
-          <span className="font-medium">{sentTo}</span>.
+          If no account exists for <span className="font-medium">{sentTo}</span>
+          , we sent a link there to verify it.
         </p>
         <ResendVerification email={sentTo} />
       </div>
