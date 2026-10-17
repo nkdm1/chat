@@ -2,6 +2,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -69,5 +70,8 @@ export const auth = betterAuth({
       return { context: { ...ctx, body: { ...ctx.body, ...parsed.data } } };
     }),
   },
-  plugins: [nextCookies()], // must stay last
+  plugins: [
+    twoFactor({ issuer: "chat" }), // TOTP + backup codes, lockout after repeated failures
+    nextCookies(), // must stay last
+  ],
 });
