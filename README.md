@@ -45,7 +45,7 @@ and has a log out button. There are deliberately no friends or chat tables yet.
 
 ## Quick start
 
-Prerequisites: Node.js 22+ (24 recommended), [pnpm](https://pnpm.io), Docker.
+Prerequisites: Node.js 22+ (24 recommended), [pnpm](https://pnpm.io) 11 (pinned in `packageManager`; Corepack or pnpm itself switches to it automatically), Docker.
 
 ```bash
 cp .env.example .env
