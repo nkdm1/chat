@@ -43,7 +43,8 @@ export const auth = betterAuth({
   },
   session: { expiresIn: 60 * 60 * 24, updateAge: 60 * 60 },
   advanced: {
-    useSecureCookies: env.NODE_ENV === "production",
+    // Secure cookies whenever the public URL is https (browsers drop them on plain http).
+    useSecureCookies: env.BETTER_AUTH_URL.startsWith("https://"),
     // Explicit so origin/CSRF validation also runs under test runners, where
     // Better Auth would otherwise turn it off by default.
     disableOriginCheck: false,

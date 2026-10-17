@@ -21,5 +21,34 @@ services:
       - "1025:1025" # SMTP
       - "8025:8025" # web UI
 
+  migrate:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_URL: postgres://chat:chat@db:5432/chat
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://chat:chat@db:5432/chat
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_URL: http://localhost:3000
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      MAIL_FROM: "chat <no-reply@chat.local>"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+
 volumes:
   pgdata:

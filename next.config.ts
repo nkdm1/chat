@@ -37,6 +37,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  output: "standalone", // small self-contained server for the Docker image
   poweredByHeader: false,
   turbopack: {
     rules: {
