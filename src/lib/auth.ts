@@ -42,10 +42,15 @@ export const auth = betterAuth({
     },
   },
   session: { expiresIn: 60 * 60 * 24, updateAge: 60 * 60 },
-  advanced: { useSecureCookies: env.NODE_ENV === "production" },
+  advanced: {
+    useSecureCookies: env.NODE_ENV === "production",
+    // Explicit so origin/CSRF validation also runs under test runners, where
+    // Better Auth would otherwise turn it off by default.
+    disableOriginCheck: false,
+  },
   trustedOrigins: [env.BETTER_AUTH_URL],
   rateLimit: {
-    enabled: true,
+    enabled: !process.env.VITEST, // tests fire many sign-ins from one "IP"
     storage: "database",
     // Endpoints that send mail or check secrets get a tighter budget.
     customRules: {
