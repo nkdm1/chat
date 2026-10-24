@@ -33,6 +33,8 @@ link there before you can sign in.
 
 ### Or run everything in Docker
 
+You only need Docker for this. Create `.env` with `BETTER_AUTH_SECRET` set (as above) first, then:
+
 ```bash
 docker compose up --build         # http://localhost:3000
 ```
