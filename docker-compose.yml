@@ -21,6 +21,33 @@ services:
       - "1025:1025" # SMTP
       - "8025:8025" # web UI
 
+  # Local stand-ins for Azure services, used through the same Azure SDKs.
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  azurite: # Blob Storage
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite:/data
+
+  cosmos: # Cosmos DB (NoSQL); Data Explorer on :1234
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-latest
+    ports:
+      - "8081:8081"
+      - "1234:1234"
+    volumes:
+      - cosmos:/data
+
+  webpubsub: # Web PubSub, built from Microsoft's emulator tool
+    build: docker/webpubsub-emulator
+    ports:
+      - "8085:8080"
+
   migrate:
     build:
       context: .
@@ -44,11 +71,29 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       MAIL_FROM: "chat <no-reply@chat.local>"
+      REDIS_URL: redis://redis:6379
+      AUTO_PROVISION: "true"
+      # Public, documented emulator keys (local development only).
+      COSMOS_CONNECTION_STRING: AccountEndpoint=http://cosmos:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==;
+      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      WEBPUBSUB_CONNECTION_STRING: Endpoint=http://webpubsub:8080;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGH;Version=1.0;
+      # Browsers connect from the host, not from inside the compose network.
+      WEBPUBSUB_CLIENT_ORIGIN: ws://localhost:8085
     depends_on:
       migrate:
         condition: service_completed_successfully
       mailpit:
         condition: service_started
+      redis:
+        condition: service_started
+      azurite:
+        condition: service_started
+      cosmos:
+        condition: service_started
+      webpubsub:
+        condition: service_started
 
 volumes:
   pgdata:
+  azurite:
+  cosmos:

@@ -10,7 +10,9 @@ export function ResendForm() {
   const [email, setEmail] = useState("");
   const [confirmed, setConfirmed] = useState<string | null>(null);
 
-  if (confirmed) return <ResendVerification email={confirmed} />;
+  if (confirmed) {
+    return <ResendVerification email={confirmed} />;
+  }
   return (
     <form
       className="space-y-3"

@@ -12,9 +12,17 @@ const MESSAGES: Record<string, string> = {
 
 /** Turns a Better Auth error into one short, user-facing sentence. */
 export function authErrorMessage(error: AuthError): string {
-  if (!error) return "Something went wrong. Try again.";
-  if (error.code && MESSAGES[error.code]) return MESSAGES[error.code];
-  if (error.status === 429) return "Too many attempts. Try again in a minute.";
-  if (error.status === 400 && error.message) return error.message;
+  if (!error) {
+    return "Something went wrong. Try again.";
+  }
+  if (error.code && MESSAGES[error.code]) {
+    return MESSAGES[error.code];
+  }
+  if (error.status === 429) {
+    return "Too many attempts. Try again in a minute.";
+  }
+  if (error.status === 400 && error.message) {
+    return error.message;
+  }
   return "Something went wrong. Try again.";
 }

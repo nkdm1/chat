@@ -9,13 +9,11 @@ import { TextField } from "@/components/text-field";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import {
-  type ForgotPasswordValues,
-  forgotPasswordSchema,
-} from "@/lib/validation";
+import type { ForgotPasswordValues } from "@/lib/validation";
+import { forgotPasswordSchema } from "@/lib/validation";
 
 export function ForgotPasswordForm() {
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -23,13 +21,15 @@ export function ForgotPasswordForm() {
   });
 
   async function onSubmit(values: ForgotPasswordValues) {
-    setError(null);
+    setFormError(null);
     const { error } = await authClient.requestPasswordReset({
       ...values,
       redirectTo: "/reset-password",
     });
     // Same message whether or not the account exists (no enumeration).
-    if (error && error.status !== 400) return setError(authErrorMessage(error));
+    if (error && error.status !== 400) {
+      return setFormError(authErrorMessage(error));
+    }
     setSent(true);
   }
 
@@ -47,7 +47,7 @@ export function ForgotPasswordForm() {
       noValidate
       className="space-y-4"
     >
-      <FormAlert>{error}</FormAlert>
+      <FormAlert>{formError}</FormAlert>
       <TextField
         control={form.control}
         name="email"

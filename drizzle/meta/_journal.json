@@ -15,6 +15,13 @@
       "when": 1792233607205,
       "tag": "0001_rainy_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793436995912,
+      "tag": "0002_lab2_chat",
+      "breakpoints": true
     }
   ]
 }

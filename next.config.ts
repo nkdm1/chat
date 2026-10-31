@@ -2,23 +2,9 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// Next injects inline bootstrap scripts, so script-src needs 'unsafe-inline'
-// (a per-request nonce is the stricter option). Dev also needs 'unsafe-eval'.
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:", // data: for the locally rendered 2FA QR code
-  "font-src 'self'",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join("; ");
-
+// The Content-Security-Policy is set per request in src/proxy.ts (runtime
+// config + script nonce). These headers are static.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -38,6 +24,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone", // small self-contained server for the Docker image
+  // Node SDKs: keep them out of the server bundle.
+  serverExternalPackages: [
+    "@azure/cosmos",
+    "@azure/storage-blob",
+    "@azure/web-pubsub",
+    "@azure/identity",
+    "@azure/communication-email",
+    "ioredis",
+  ],
   poweredByHeader: false,
   turbopack: {
     rules: {
@@ -47,6 +42,8 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Next requires an async function here.
+  // oxlint-disable-next-line typescript/require-await
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

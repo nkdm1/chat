@@ -5,7 +5,9 @@ import { testDatabaseUrl } from "./test-db";
 
 try {
   process.loadEnvFile(".env");
-} catch {}
+} catch {
+  // No .env file: rely on the real environment.
+}
 
 // Creates chat_test if needed and applies the real migrations to it.
 export default async function setup() {
@@ -17,7 +19,9 @@ export default async function setup() {
   const admin = postgres(adminUrl.toString(), { max: 1 });
   const exists =
     await admin`select 1 from pg_database where datname = ${dbName}`;
-  if (exists.length === 0) await admin.unsafe(`create database "${dbName}"`);
+  if (exists.length === 0) {
+    await admin.unsafe(`create database "${dbName}"`);
+  }
   await admin.end();
 
   // "already exists, skipping" notices are expected on re-runs.

@@ -16,13 +16,15 @@ export function TwoFactorForm() {
   const [code, setCode] = useState("");
   const [trust, setTrust] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
 
   async function verify(value: string) {
-    if (pending || !value) return;
+    if (pending || !value) {
+      return;
+    }
     setPending(true);
-    setError(null);
+    setFormError(null);
     const verifyFn =
       mode === "totp"
         ? authClient.twoFactor.verifyTotp
@@ -32,7 +34,7 @@ export function TwoFactorForm() {
       setPending(false);
       setCode("");
       setShake((n) => n + 1);
-      setError(
+      setFormError(
         error.status === 429
           ? "Too many attempts. Try again in a few minutes."
           : "That code didn't work.",
@@ -46,12 +48,12 @@ export function TwoFactorForm() {
   function switchMode() {
     setMode(mode === "totp" ? "backup" : "totp");
     setCode("");
-    setError(null);
+    setFormError(null);
   }
 
   return (
     <div className="space-y-4">
-      <FormAlert>{error}</FormAlert>
+      <FormAlert>{formError}</FormAlert>
       {mode === "totp" ? (
         <OtpField
           value={code}
@@ -66,7 +68,7 @@ export function TwoFactorForm() {
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            verify(code.trim());
+            void verify(code.trim());
           }}
         >
           <Input

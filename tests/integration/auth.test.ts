@@ -3,6 +3,7 @@ import { generate } from "otplib";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
 import { account, session, user } from "@/db/schema";
+import * as email from "@/lib/email";
 import {
   createVerifiedUser,
   follow,
@@ -42,7 +43,7 @@ describe("registration", () => {
   it("rejects invalid input on the server", async () => {
     const res = await signUp({ username: "A!", password: "short" });
     expect(res.status).toBe(400);
-    expect(await db.select().from(user)).toHaveLength(0);
+    await expect(db.select().from(user)).resolves.toHaveLength(0);
   });
 
   it("rejects a taken username (case-insensitive)", async () => {
@@ -54,7 +55,7 @@ describe("registration", () => {
   it("does not create a second account for the same email", async () => {
     await signUp();
     await signUp({ username: "ann2" });
-    expect(await db.select().from(user)).toHaveLength(1);
+    await expect(db.select().from(user)).resolves.toHaveLength(1);
   });
 });
 
@@ -115,11 +116,11 @@ describe("login and logout", () => {
 
   it("deletes the session on sign-out", async () => {
     const { cookie } = await createVerifiedUser();
-    expect(await getSession(cookie)).not.toBeNull();
+    await expect(getSession(cookie)).resolves.not.toBeNull();
     const out = await post("/sign-out", {}, cookie);
     expect(out.status).toBe(200);
-    expect(await getSession(cookie)).toBeNull();
-    expect(await db.select().from(session)).toHaveLength(0);
+    await expect(getSession(cookie)).resolves.toBeNull();
+    await expect(db.select().from(session)).resolves.toHaveLength(0);
   });
 });
 
@@ -131,18 +132,14 @@ describe("password reset", () => {
       email: "nobody@example.com",
       redirectTo: "/reset-password",
     });
-    expect(
-      (await import("@/lib/email")).sendMailInBackground,
-    ).not.toHaveBeenCalled();
+    expect(vi.mocked(email.sendMailInBackground)).not.toHaveBeenCalled();
     const known = await post("/request-password-reset", {
       email: "ann@example.com",
       redirectTo: "/reset-password",
     });
     expect(known.status).toBe(unknown.status);
     expect(known.json).toEqual(unknown.json);
-    expect(
-      (await import("@/lib/email")).sendMailInBackground,
-    ).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(email.sendMailInBackground)).toHaveBeenCalledOnce();
   });
 
   it("resets once, revokes old sessions and rejects token reuse", async () => {
@@ -167,7 +164,7 @@ describe("password reset", () => {
     });
     expect(reuse.status).toBe(400);
 
-    expect(await getSession(cookie)).toBeNull();
+    await expect(getSession(cookie)).resolves.toBeNull();
     const old = await post("/sign-in/email", {
       email: "ann@example.com",
       password: PASSWORD,
@@ -198,16 +195,16 @@ describe("two-factor authentication", () => {
       cookie,
     );
     expect(enabled.status).toBe(200);
-    const secret = new URL(enabled.json.totpURI).searchParams.get(
-      "secret",
-    ) as string;
+    const secret =
+      new URL(enabled.json.totpURI).searchParams.get("secret") ?? "";
     const verified = await post(
       "/two-factor/verify-totp",
       { code: await generate({ secret }) },
       cookie,
     );
     expect(verified.status).toBe(200);
-    return { secret, backupCodes: enabled.json.backupCodes as string[] };
+    const backupCodes: string[] = enabled.json.backupCodes;
+    return { secret, backupCodes };
   }
 
   it("requires a second step at sign-in and accepts a valid TOTP", async () => {
@@ -217,7 +214,7 @@ describe("two-factor authentication", () => {
       password: PASSWORD,
     });
     expect(login.json.twoFactorRedirect).toBe(true);
-    expect(await getSession(login.cookie)).toBeNull();
+    await expect(getSession(login.cookie)).resolves.toBeNull();
 
     const wrong = await post(
       "/two-factor/verify-totp",
@@ -232,7 +229,7 @@ describe("two-factor authentication", () => {
       login.cookie,
     );
     expect(ok.status).toBe(200);
-    expect(await getSession(ok.cookie)).not.toBeNull();
+    await expect(getSession(ok.cookie)).resolves.not.toBeNull();
   });
 
   it("accepts each backup code exactly once", async () => {

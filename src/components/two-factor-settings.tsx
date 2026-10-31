@@ -22,6 +22,40 @@ const PASSWORD_ERRORS: Record<string, string> = {
   INVALID_PASSWORD: "Wrong password.",
 };
 
+type AuthError = { code?: string; status: number };
+type ActionResult = { error: AuthError | null; codes?: string[]; uri?: string };
+
+async function runAction(
+  action: Action,
+  password: string,
+): Promise<ActionResult> {
+  if (action === "enable") {
+    const { data, error } = await authClient.twoFactor.enable({ password });
+    if (data?.method !== "totp") {
+      return { error };
+    }
+    return { error, codes: data.backupCodes, uri: data.totpURI };
+  }
+  if (action === "disable") {
+    const { error } = await authClient.twoFactor.disable({ password });
+    return { error };
+  }
+  const { data, error } = await authClient.twoFactor.generateBackupCodes({
+    password,
+  });
+  return { error, codes: data?.backupCodes };
+}
+
+function passwordErrorMessage(error: AuthError) {
+  const known = PASSWORD_ERRORS[error.code ?? ""];
+  if (known) {
+    return known;
+  }
+  return error.status === 429
+    ? "Too many attempts. Try again shortly."
+    : "Something went wrong. Try again.";
+}
+
 export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
   const router = useRouter();
   const [view, setView] = useState<View>({ step: "idle" });
@@ -29,63 +63,55 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
   const [code, setCode] = useState("");
   const [shake, setShake] = useState(0);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   function reset() {
     setView({ step: "idle" });
     setPassword("");
     setCode("");
-    setError(null);
+    setFormError(null);
   }
 
   async function submitPassword(action: Action) {
     setPending(true);
-    setError(null);
-    const res =
-      action === "enable"
-        ? await authClient.twoFactor.enable({ password })
-        : action === "disable"
-          ? await authClient.twoFactor.disable({ password })
-          : await authClient.twoFactor.generateBackupCodes({ password });
+    setFormError(null);
+    const res = await runAction(action, password);
     setPending(false);
     if (res.error) {
-      return setError(
-        PASSWORD_ERRORS[res.error.code ?? ""] ??
-          (res.error.status === 429
-            ? "Too many attempts. Try again shortly."
-            : "Something went wrong. Try again."),
-      );
+      return setFormError(passwordErrorMessage(res.error));
     }
     setPassword("");
     if (action === "disable") {
       reset();
       return router.refresh();
     }
-    const data = res.data as { totpURI?: string; backupCodes: string[] };
+    const codes = res.codes ?? [];
     if (action === "regenerate") {
-      return setView({ step: "codes", codes: data.backupCodes });
+      return setView({ step: "codes", codes });
     }
-    const uri = data.totpURI ?? "";
+    const uri = res.uri ?? "";
     // The URI contains the secret: render the QR locally, never via a third party.
     const qr = await QRCode.toDataURL(uri, { margin: 1, width: 192 });
     setView({
       step: "scan",
       qr,
       secret: new URL(uri).searchParams.get("secret") ?? "",
-      codes: data.backupCodes,
+      codes,
     });
   }
 
   async function verifyCode(value: string, codes: string[]) {
-    if (pending) return;
+    if (pending) {
+      return;
+    }
     setPending(true);
-    setError(null);
+    setFormError(null);
     const { error } = await authClient.twoFactor.verifyTotp({ code: value });
     setPending(false);
     if (error) {
       setCode("");
       setShake((n) => n + 1);
-      return setError("That code didn't work.");
+      return setFormError("That code didn't work.");
     }
     setCode("");
     setView({ step: "codes", codes });
@@ -131,10 +157,10 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
           className="animate-enter space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            submitPassword(view.action);
+            void submitPassword(view.action);
           }}
         >
-          <FormAlert>{error}</FormAlert>
+          <FormAlert>{formError}</FormAlert>
           <Input
             type="password"
             value={password}
@@ -162,7 +188,8 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
           <p className="text-muted-foreground">
             Scan with your authenticator app, then enter the 6-digit code.
           </p>
-          {/* biome-ignore lint/performance/noImgElement: local data URL, nothing to optimize */}
+          {/* Local data URL: nothing for next/image to optimize. */}
+          {/* oxlint-disable-next-line nextjs/no-img-element */}
           <img
             src={view.qr}
             alt="Authenticator QR code"
@@ -174,11 +201,11 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
             Or enter the key{" "}
             <code className="font-mono text-foreground">{view.secret}</code>
           </p>
-          <FormAlert>{error}</FormAlert>
+          <FormAlert>{formError}</FormAlert>
           <OtpField
             value={code}
             onChange={setCode}
-            onComplete={(v) => verifyCode(v, view.codes)}
+            onComplete={async (v) => await verifyCode(v, view.codes)}
             disabled={pending}
             shakeKey={shake}
           />

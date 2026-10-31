@@ -14,7 +14,9 @@ export default async function VerifyEmailPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  if (!error && (await getSession())) redirect("/chat");
+  if (!error && (await getSession())) {
+    redirect("/chat");
+  }
 
   return (
     <AuthShell title={error ? "Link expired" : "Verify email"}>

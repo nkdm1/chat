@@ -2,7 +2,9 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { twoFactor } from "better-auth/plugins";
+import { admin, twoFactor } from "better-auth/plugins";
+import { createAccessControl } from "better-auth/plugins/access";
+import { defaultStatements } from "better-auth/plugins/admin/access";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -10,6 +12,16 @@ import { sendMailInBackground } from "@/lib/email";
 import { resetPasswordEmail, verificationEmail } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { signUpApiSchema } from "@/lib/validation";
+
+// Admins can manage users and sessions but never impersonate anyone.
+const ac = createAccessControl(defaultStatements);
+const roles = {
+  admin: ac.newRole({
+    user: ["list", "set-role", "ban", "get", "update"],
+    session: ["list", "revoke", "delete"],
+  }),
+  user: ac.newRole({ user: [], session: [] }),
+};
 
 export const auth = betterAuth({
   appName: "chat",
@@ -26,6 +38,8 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     resetPasswordTokenExpiresIn: 60 * 30, // single-use, 30 minutes
     revokeSessionsOnPasswordReset: true,
+    // Delivery is deliberately not awaited (see sendMailInBackground).
+    // oxlint-disable-next-line typescript/require-await
     sendResetPassword: async ({ user, url }) => {
       sendMailInBackground(resetPasswordEmail(user, url));
     },
@@ -34,6 +48,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
+    // oxlint-disable-next-line typescript/require-await
     sendVerificationEmail: async ({ user, url }) => {
       sendMailInBackground(verificationEmail(user, url));
     },
@@ -66,7 +81,9 @@ export const auth = betterAuth({
   hooks: {
     // Authoritative server-side validation; the client schema is only for UX.
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== "/sign-up/email") return;
+      if (ctx.path !== "/sign-up/email") {
+        return;
+      }
       const parsed = signUpApiSchema.safeParse(ctx.body);
       if (!parsed.success) {
         throw new APIError("BAD_REQUEST", {
@@ -90,6 +107,8 @@ export const auth = betterAuth({
   },
   plugins: [
     twoFactor({ issuer: "chat" }), // TOTP + backup codes, lockout after repeated failures
+    // role/banned fields; banned users can't sign in (bans may expire).
+    admin({ ac, roles, bannedUserMessage: "This account is banned." }),
     nextCookies(), // must stay last
   ],
 });

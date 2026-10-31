@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { type SignInValues, signInSchema } from "@/lib/validation";
+import type { SignInValues } from "@/lib/validation";
+import { signInSchema } from "@/lib/validation";
 
 export function SignInForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState<string | null>(null);
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
@@ -25,13 +26,15 @@ export function SignInForm() {
   });
 
   async function onSubmit(values: SignInValues) {
-    setError(null);
+    setFormError(null);
     setUnverified(null);
     const { data, error } = await authClient.signIn.email(values);
     if (error?.code === "EMAIL_NOT_VERIFIED") {
       return setUnverified(values.email.trim().toLowerCase());
     }
-    if (error) return setError(authErrorMessage(error));
+    if (error) {
+      return setFormError(authErrorMessage(error));
+    }
     if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {
       return router.push("/two-factor");
     }
@@ -45,7 +48,7 @@ export function SignInForm() {
       noValidate
       className="space-y-4"
     >
-      <FormAlert>{error}</FormAlert>
+      <FormAlert>{formError}</FormAlert>
       {unverified && (
         <div className="animate-enter space-y-3 rounded-lg border p-3">
           <p>Verify your email first. We sent you a new link.</p>
