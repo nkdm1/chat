@@ -84,6 +84,8 @@ type Options = {
   admin?: boolean;
   /** Extra limit on top of the catch-all "write" budget for mutating requests. */
   limit?: LimitName;
+  /** Cheap, idempotent pings (heartbeat, typing, negotiate) skip the write budget. */
+  skipWriteLimit?: boolean;
 };
 
 type Ctx<P> = { req: NextRequest; user: SessionUser; params: P };
@@ -138,7 +140,7 @@ export function withUser<P = Record<string, never>>(
         throw forbidden("Cross-origin request blocked");
       }
       const user = await authenticate(req, options);
-      if (mutating) {
+      if (mutating && !options.skipWriteLimit) {
         await limit("write", user.id);
       }
       if (options.limit) {

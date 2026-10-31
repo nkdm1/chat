@@ -75,7 +75,6 @@ export class MemoryTtl<V = string> {
     this.items.set(key, { value, expires: Date.now() + ttlSeconds * 1000 });
   }
 
-  /** SET NX semantics: true if the key was newly set. */
   setIfAbsent(key: string, value: V, ttlSeconds: number) {
     if (this.get(key) !== undefined) {
       return false;

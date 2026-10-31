@@ -123,6 +123,9 @@ export default defineConfig({
       { checksVoidReturn: { attributes: false } },
     ],
 
+    // `void promise` is how no-floating-promises asks to mark fire-and-forget.
+    "eslint/no-void": ["error", { allowAsStatement: true }],
+
     // The type-aware variant understands that returning a promise is fine.
     "require-await": "off",
     "typescript/require-await": "error",

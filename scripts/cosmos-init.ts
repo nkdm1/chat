@@ -3,7 +3,15 @@
 import { blobs } from "../src/server/blob";
 import { CosmosMessageStore } from "../src/server/messages/cosmos";
 
-await new CosmosMessageStore().init();
-await blobs().createIfNotExists();
-console.log("Cosmos container and blob container are ready.");
-process.exit(0);
+async function main() {
+  await new CosmosMessageStore().init();
+  await blobs().createIfNotExists();
+  console.log("Cosmos container and blob container are ready.");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exit(1);
+  });

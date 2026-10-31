@@ -41,7 +41,6 @@ export function sanitizeText(input: string): string {
     .trim();
 }
 
-/** Single-line variant for names and short labels. */
 export function sanitizeLine(input: string): string {
   return sanitizeText(input).replaceAll(/\s+/g, " ");
 }

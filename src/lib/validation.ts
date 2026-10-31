@@ -50,7 +50,6 @@ export const resetPasswordSchema = z
 export type ForgotPasswordValues = z.input<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.input<typeof resetPasswordSchema>;
 
-// ---- Chat ----------------------------------------------------------------
 // Shared by the API (authoritative) and the UI (instant feedback).
 
 export const MESSAGE_MAX = 2000;

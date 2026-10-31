@@ -74,7 +74,6 @@ export async function hit(
     : { ok: true };
 }
 
-/** Test helper. */
 export function resetMemoryLimits() {
   memory.clear();
 }

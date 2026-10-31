@@ -21,7 +21,6 @@ const schema = z
     BETTER_AUTH_SECRET: z.string().min(32, "use `openssl rand -base64 32`"),
     BETTER_AUTH_URL: z.url(),
 
-    // Email: "smtp" (Mailpit locally) or "acs" (Azure Communication Services).
     EMAIL_PROVIDER: z.enum(["smtp", "acs"]).default("smtp"),
     MAIL_FROM: z.string().min(1),
     SMTP_HOST: optional,

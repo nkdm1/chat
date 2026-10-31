@@ -88,7 +88,6 @@ export async function areFriends(a: string, b: string) {
   return !!row;
 }
 
-/** Ids of all accepted friends of a user. */
 export async function friendIds(userId: string) {
   const rows = await db
     .select({

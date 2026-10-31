@@ -65,7 +65,6 @@ export async function metrics() {
       storageUsedBytes(),
     ]);
 
-  // 14 consecutive days, zero-filled.
   const byDay = new Map(daily.map((d) => [d.day, d.count]));
   const messagesPerDay = Array.from({ length: 14 }, (_, i) => {
     const day = new Date(Date.now() - (13 - i) * DAY)

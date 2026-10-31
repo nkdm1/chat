@@ -67,7 +67,6 @@ function isMuted(mutedUntil: Date | null) {
   return !!mutedUntil && mutedUntil > new Date();
 }
 
-/** For each DM, the other member (used as the title). */
 async function directPeers(userId: string, conversationIds: string[]) {
   const peers = await db
     .select({

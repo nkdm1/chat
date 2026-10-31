@@ -6,6 +6,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { ConfirmProvider } from "@/components/confirm-dialog";
 
 let browserClient: QueryClient | undefined;
 
@@ -21,7 +22,7 @@ function getQueryClient() {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={getQueryClient()}>
-      {children}
+      <ConfirmProvider>{children}</ConfirmProvider>
     </QueryClientProvider>
   );
 }

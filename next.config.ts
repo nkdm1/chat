@@ -34,6 +34,9 @@ const nextConfig: NextConfig = {
     "ioredis",
   ],
   poweredByHeader: false,
+  // Browser log forwarding writes into .next/dev/logs on every page load, which
+  // retriggered a dev rebuild and reloaded the page in a loop.
+  logging: { browserToTerminal: false },
   turbopack: {
     rules: {
       "*.css": {
