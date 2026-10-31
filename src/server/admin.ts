@@ -42,7 +42,7 @@ export async function metrics() {
         .select({
           total: count,
           verified: sql<number>`count(*) filter (where ${user.emailVerified})::int`,
-          new7d: sql<number>`count(*) filter (where ${user.createdAt} >= ${since7})::int`,
+          new7d: sql<number>`count(*) filter (where ${user.createdAt} >= ${since7.toISOString()})::int`,
           banned: sql<number>`count(*) filter (where ${user.banned})::int`,
         })
         .from(user)

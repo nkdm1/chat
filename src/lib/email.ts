@@ -1,3 +1,4 @@
+import type { EmailMessage, EmailSendResult } from "@azure/communication-email";
 import { EmailClient } from "@azure/communication-email";
 import { createTransport } from "nodemailer";
 import { azureCredential } from "@/lib/azure";
@@ -24,7 +25,12 @@ export function smtpSender(): EmailSender {
   };
 }
 
-type AcsClient = Pick<EmailClient, "beginSend">;
+/** The part of EmailClient we use, so tests can pass a small fake. */
+type AcsClient = {
+  beginSend(
+    message: EmailMessage,
+  ): Promise<{ pollUntilDone(): Promise<EmailSendResult> }>;
+};
 
 export function acsSender(
   client: AcsClient = env.ACS_CONNECTION_STRING
