@@ -457,17 +457,24 @@ export async function toggleReaction(
   if (!found || found.doc.deletedAt) {
     throw notFound("Message not found");
   }
-  const where = and(
-    eq(messageReaction.messageId, messageId),
-    eq(messageReaction.userId, userId),
-    eq(messageReaction.emoji, emoji),
-  );
-  const removed = await db.delete(messageReaction).where(where).returning();
+  const removed = await db
+    .delete(messageReaction)
+    .where(
+      and(
+        eq(messageReaction.messageId, messageId),
+        eq(messageReaction.userId, userId),
+        eq(messageReaction.emoji, emoji),
+      ),
+    )
+    .returning();
   if (removed.length === 0) {
     await db
       .insert(messageReaction)
       .values({ messageId, userId, emoji, conversationId })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: [messageReaction.messageId, messageReaction.userId],
+        set: { emoji, createdAt: new Date() },
+      });
   }
   const [view] = await hydrate([found.doc]);
   await realtime().toUsers(await memberIds(conversationId), {

@@ -28,7 +28,7 @@ import type {
   Message,
   Reaction,
 } from "@/lib/chat-types";
-import { notify } from "@/lib/notifications";
+import { notify, unlockAudioOnGesture } from "@/lib/notifications";
 
 type Typist = { userId: string; username: string; until: number };
 
@@ -50,7 +50,7 @@ export function useRealtime() {
   return value;
 }
 
-const TYPING_MS = 4000;
+const TYPING_MS = 10_000;
 const HEARTBEAT_MS = 30_000;
 
 type ServerEvent =
@@ -90,16 +90,16 @@ function isServerEvent(value: unknown): value is ServerEvent {
 type Handlers = {
   qc: QueryClient;
   me: Me;
-  active: () => string | null;
   onTyping: (event: {
     conversationId: string;
     userId: string;
     username: string;
   }) => void;
+  onStopTyping: (conversationId: string, userId: string) => void;
   onRemoved: (conversationId: string) => void;
 };
 
-function onMessageCreated({ qc, me, active }: Handlers, message: Message) {
+function onMessageCreated({ qc, me }: Handlers, message: Message) {
   upsertMessage(qc, message);
   void qc.invalidateQueries({ queryKey: keys.conversations });
   if (message.senderId === me.id) {
@@ -109,8 +109,7 @@ function onMessageCreated({ qc, me, active }: Handlers, message: Message) {
     .getQueryData<ConversationSummary[]>(keys.conversations)
     ?.find((c) => c.id === message.conversationId);
   const mentioned = message.mentions.includes(me.id);
-  const visible = active() === message.conversationId && !document.hidden;
-  if (!visible && (mentioned || !summary?.muted)) {
+  if (mentioned || !summary?.muted) {
     notify({
       title:
         summary?.type === "group"
@@ -167,6 +166,7 @@ function handle(h: Handlers, event: ServerEvent) {
   const { qc } = h;
   switch (event.type) {
     case "message.created":
+      h.onStopTyping(event.message.conversationId, event.message.senderId);
       onMessageCreated(h, event.message);
       break;
     case "message.updated":
@@ -262,6 +262,7 @@ export function RealtimeProvider({
   activeRef.current = activeConversation;
 
   useHeartbeat();
+  useEffect(unlockAudioOnGesture, []);
   useUnreadTitle(connected);
 
   useEffect(() => {
@@ -274,7 +275,6 @@ export function RealtimeProvider({
     const handlers: Handlers = {
       qc,
       me,
-      active: () => activeRef.current,
       onTyping: ({ conversationId, userId, username }) =>
         setTyping((prev) => ({
           ...prev,
@@ -282,6 +282,13 @@ export function RealtimeProvider({
             ...(prev[conversationId] ?? []).filter((t) => t.userId !== userId),
             { userId, username, until: Date.now() + TYPING_MS },
           ],
+        })),
+      onStopTyping: (conversationId, userId) =>
+        setTyping((prev) => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] ?? []).filter(
+            (t) => t.userId !== userId,
+          ),
         })),
       onRemoved: (conversationId) => {
         if (activeRef.current === conversationId) {
@@ -301,8 +308,25 @@ export function RealtimeProvider({
         handle(handlers, message.data);
       }
     });
-    void client.start().catch(() => setConnected(false));
-    return () => client.stop();
+    // stop() is ignored while start() is still connecting, so a client
+    // cleaned up mid-connect is stopped once it finishes.
+    let disposed = false;
+    client
+      .start()
+      .then(() => {
+        if (disposed) {
+          client.stop();
+        }
+      })
+      .catch(() => {
+        if (!disposed) {
+          setConnected(false);
+        }
+      });
+    return () => {
+      disposed = true;
+      client.stop();
+    };
   }, [qc, me, router]);
 
   // Drop expired typing indicators.

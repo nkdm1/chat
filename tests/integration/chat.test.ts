@@ -559,7 +559,11 @@ describe("messages", () => {
       });
     const added = await react("👍");
     expect(added.json.reactions).toEqual([{ emoji: "👍", userIds: [bob.id] }]);
-    const removed = await react("👍");
+    const replaced = await react("❤️");
+    expect(replaced.json.reactions).toEqual([
+      { emoji: "❤️", userIds: [bob.id] },
+    ]);
+    const removed = await react("❤️");
     expect(removed.json.reactions).toEqual([]);
     const notAllowed = await react("💩");
     expect(notAllowed.status).toBe(400);

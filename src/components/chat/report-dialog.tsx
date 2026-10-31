@@ -41,22 +41,29 @@ export function ReportDialog({
   const [details, setDetails] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [formError, setFormError] = useState<string | null>(null);
-
-  function close() {
-    onClose();
-    setState("idle");
-    setDetails("");
-    setFormError(null);
+  // Keeps the last message (and the "sent" view) while the dialog animates
+  // out; the form resets only when the dialog opens again.
+  const [current, setCurrent] = useState(message);
+  const [open, setOpen] = useState(!!message);
+  if (!!message !== open) {
+    setOpen(!!message);
+    if (message) {
+      setCurrent(message);
+      setReason("spam");
+      setDetails("");
+      setState("idle");
+      setFormError(null);
+    }
   }
 
   async function submit() {
-    if (!message) {
+    if (!current) {
       return;
     }
     setState("sending");
     setFormError(null);
     try {
-      await onSubmit(message, reason, details.trim());
+      await onSubmit(current, reason, details.trim());
       setState("sent");
     } catch (error) {
       setFormError(errorMessage(error));
@@ -65,7 +72,7 @@ export function ReportDialog({
   }
 
   return (
-    <Dialog open={!!message} onOpenChange={(open) => !open && close()}>
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Report message</DialogTitle>
@@ -77,7 +84,7 @@ export function ReportDialog({
         </DialogHeader>
         {state === "sent" ? (
           <DialogFooter>
-            <Button onClick={close}>Done</Button>
+            <Button onClick={onClose}>Done</Button>
           </DialogFooter>
         ) : (
           <form
@@ -89,7 +96,7 @@ export function ReportDialog({
           >
             <FormAlert>{formError}</FormAlert>
             <blockquote className="line-clamp-3 rounded-lg bg-muted px-3 py-2 text-sm">
-              {message?.body || "Attachment"}
+              {current?.body || "Attachment"}
             </blockquote>
             <fieldset className="space-y-1.5">
               <legend className="mb-1.5 font-medium text-sm">Reason</legend>
@@ -120,7 +127,7 @@ export function ReportDialog({
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={close}>
+              <Button type="button" variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
               <Button type="submit" disabled={state === "sending"}>

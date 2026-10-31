@@ -101,7 +101,7 @@ export const messageReaction = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.messageId, t.userId, t.emoji] }),
+    primaryKey({ columns: [t.messageId, t.userId] }),
     index("message_reaction_message_idx").on(t.messageId),
   ],
 );
