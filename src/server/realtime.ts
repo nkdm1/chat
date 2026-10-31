@@ -14,38 +14,49 @@ export interface Publisher {
   ping(): Promise<void>;
 }
 
+const insecure = (url: string) => url.startsWith("http://");
+
+function keyClient(connectionString: string) {
+  return new WebPubSubServiceClient(connectionString, env.WEBPUBSUB_HUB, {
+    allowInsecureConnection: insecure(
+      /Endpoint=([^;]+)/i.exec(connectionString)?.[1] ?? "",
+    ),
+  });
+}
+
 class WebPubSubPublisher implements Publisher {
   private readonly client: WebPubSubServiceClient;
+  // Signs client URLs. With an access key the token is signed locally and its
+  // audience is the endpoint, so it must be the origin browsers connect to:
+  // otherwise the service rejects the WebSocket with 401.
+  private readonly tokenClient: WebPubSubServiceClient;
 
   constructor() {
-    const insecure = (url: string) => url.startsWith("http://");
-    this.client = env.WEBPUBSUB_CONNECTION_STRING
-      ? new WebPubSubServiceClient(
-          env.WEBPUBSUB_CONNECTION_STRING,
-          env.WEBPUBSUB_HUB,
-          {
-            allowInsecureConnection: insecure(
-              /Endpoint=([^;]+)/i.exec(env.WEBPUBSUB_CONNECTION_STRING)?.[1] ??
-                "",
-            ),
-          },
-        )
+    const cs = env.WEBPUBSUB_CONNECTION_STRING;
+    this.client = cs
+      ? keyClient(cs)
       : new WebPubSubServiceClient(
           env.WEBPUBSUB_ENDPOINT ?? "",
           azureCredential(),
           env.WEBPUBSUB_HUB,
           { allowInsecureConnection: insecure(env.WEBPUBSUB_ENDPOINT ?? "") },
         );
+    const origin = env.WEBPUBSUB_CLIENT_ORIGIN?.replace(/^ws/i, "http");
+    this.tokenClient =
+      cs && origin
+        ? keyClient(cs.replace(/Endpoint=[^;]+/i, `Endpoint=${origin}`))
+        : this.client;
   }
 
   async clientUrl(userId: string) {
-    const { url } = await this.client.getClientAccessToken({
+    const { url } = await this.tokenClient.getClientAccessToken({
       userId,
       roles: [],
       expirationTimeInMinutes: 5,
     });
     // Inside docker-compose the server reaches the emulator by service name,
-    // but the browser must use the host-published origin.
+    // but the browser must use the host-published origin. (Already true for
+    // key-signed URLs; managed-identity URLs still need the rewrite.)
     if (!env.WEBPUBSUB_CLIENT_ORIGIN) {
       return url;
     }
