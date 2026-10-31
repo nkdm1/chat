@@ -1,0 +1,3 @@
+DELETE FROM "message_reaction" r USING "message_reaction" newer WHERE r."message_id" = newer."message_id" AND r."user_id" = newer."user_id" AND (r."created_at", r."emoji") < (newer."created_at", newer."emoji");--> statement-breakpoint
+ALTER TABLE "message_reaction" DROP CONSTRAINT "message_reaction_message_id_user_id_emoji_pk";--> statement-breakpoint
+ALTER TABLE "message_reaction" ADD CONSTRAINT "message_reaction_message_id_user_id_pk" PRIMARY KEY("message_id","user_id");

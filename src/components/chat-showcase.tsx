@@ -41,7 +41,7 @@ export function ChatShowcase() {
         <div className="absolute -top-10 -right-6 z-10 animate-float rounded-xl border bg-card px-4 py-3 shadow-sm">
           <p className="text-xs text-muted-foreground">Your friend code</p>
           <p className="font-mono text-base font-medium tracking-wider">
-            K7QM-92XD
+            482 915
           </p>
         </div>
 

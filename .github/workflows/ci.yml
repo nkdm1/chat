@@ -23,10 +23,21 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      cosmos:
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-latest
+        ports:
+          - 8081:8081
     env:
       DATABASE_URL: postgres://chat:chat@localhost:5432/chat
     steps:
       - uses: actions/checkout@v4
+      # Not a service container: those can't take a command, and Azurite needs
+      # --skipApiVersionCheck to accept the SDK's newer API version (as in docker-compose.yml).
+      - run: docker run -d -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -34,5 +45,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec biome ci .
+      - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

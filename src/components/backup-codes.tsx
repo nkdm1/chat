@@ -26,8 +26,8 @@ export function BackupCodes({ codes }: { codes: string[] }) {
   return (
     <div className="animate-enter space-y-3">
       <p className="text-muted-foreground">
-        Each code works once. Store them somewhere safe; they won't be shown
-        again.
+        Each code works once. Store them somewhere safe; they won&apos;t be
+        shown again.
       </p>
       <ul className="grid grid-cols-2 gap-2 rounded-lg border p-3 font-mono">
         {codes.map((code) => (

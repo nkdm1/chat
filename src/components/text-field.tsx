@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  type Control,
-  Controller,
-  type FieldPath,
-  type FieldValues,
-} from "react-hook-form";
+import type { Control, FieldPath, FieldValues } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 

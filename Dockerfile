@@ -13,7 +13,9 @@ COPY . .
 ENV DATABASE_URL=postgres://build:build@localhost:5432/build \
     BETTER_AUTH_SECRET=build-only-build-only-build-only-build \
     BETTER_AUTH_URL=http://localhost:3000 \
-    SMTP_HOST=localhost SMTP_PORT=1025 MAIL_FROM=build@localhost
+    SMTP_HOST=localhost SMTP_PORT=1025 MAIL_FROM=build@localhost \
+    COSMOS_ENDPOINT=https://build.invalid WEBPUBSUB_ENDPOINT=https://build.invalid \
+    AZURE_STORAGE_ACCOUNT_URL=https://build.invalid
 RUN pnpm build
 
 # One-shot job: applies the SQL migrations, then exits.

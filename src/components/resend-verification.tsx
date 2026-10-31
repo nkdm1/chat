@@ -10,7 +10,7 @@ export function ResendVerification({ email }: { email: string }) {
   const [state, setState] = useState<"idle" | "pending" | "sent" | "error">(
     "idle",
   );
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function resend() {
     setState("pending");
@@ -19,7 +19,7 @@ export function ResendVerification({ email }: { email: string }) {
       callbackURL: "/verify-email",
     });
     if (error) {
-      setError(authErrorMessage(error));
+      setFormError(authErrorMessage(error));
       return setState("error");
     }
     setState("sent");
@@ -36,7 +36,7 @@ export function ResendVerification({ email }: { email: string }) {
       </Button>
       {state === "error" && (
         <p role="alert" className="animate-enter text-destructive">
-          {error}
+          {formError}
         </p>
       )}
     </div>

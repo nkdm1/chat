@@ -11,10 +11,11 @@ import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { type SignUpValues, signUpSchema } from "@/lib/validation";
+import type { SignUpValues } from "@/lib/validation";
+import { signUpSchema } from "@/lib/validation";
 
 export function SignUpForm() {
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -22,7 +23,7 @@ export function SignUpForm() {
   });
 
   async function onSubmit(values: SignUpValues) {
-    setError(null);
+    setFormError(null);
     const { error } = await authClient.signUp.email({
       username: values.username,
       email: values.email,
@@ -30,7 +31,9 @@ export function SignUpForm() {
       name: values.username,
       callbackURL: "/verify-email",
     });
-    if (error) return setError(authErrorMessage(error));
+    if (error) {
+      return setFormError(authErrorMessage(error));
+    }
     setSentTo(values.email);
   }
 
@@ -52,7 +55,7 @@ export function SignUpForm() {
       noValidate
       className="space-y-4"
     >
-      <FormAlert>{error}</FormAlert>
+      <FormAlert>{formError}</FormAlert>
       <FieldGroup>
         <TextField
           control={form.control}

@@ -78,9 +78,11 @@ describe("authErrorMessage", () => {
       "Wrong email or password.",
     );
   });
+
   it("maps rate limiting", () => {
     expect(authErrorMessage({ status: 429 })).toMatch(/too many/i);
   });
+
   it("falls back to a generic message", () => {
     expect(authErrorMessage({ status: 500, message: "stack trace" })).toBe(
       "Something went wrong. Try again.",

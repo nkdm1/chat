@@ -11,27 +11,25 @@ import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import {
-  type ResetPasswordValues,
-  resetPasswordSchema,
-} from "@/lib/validation";
+import type { ResetPasswordValues } from "@/lib/validation";
+import { resetPasswordSchema } from "@/lib/validation";
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: "", confirm: "" },
   });
 
   async function onSubmit(values: ResetPasswordValues) {
-    setError(null);
+    setFormError(null);
     const { error } = await authClient.resetPassword({
       newPassword: values.password,
       token,
     });
     if (error) {
-      return setError(
+      return setFormError(
         error.code === "INVALID_TOKEN"
           ? "This link has expired or was already used."
           : authErrorMessage(error),
@@ -46,7 +44,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       noValidate
       className="space-y-4"
     >
-      <FormAlert>{error}</FormAlert>
+      <FormAlert>{formError}</FormAlert>
       <FieldGroup>
         <TextField
           control={form.control}

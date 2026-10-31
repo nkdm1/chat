@@ -10,13 +10,15 @@ const escapeHtml = (value: string) =>
 
 type Recipient = { name: string; email: string };
 
-function layout(
-  heading: string,
-  intro: string,
-  label: string,
-  url: string,
-  note: string,
-) {
+type Layout = {
+  heading: string;
+  intro: string;
+  label: string;
+  url: string;
+  note: string;
+};
+
+function layout({ heading, intro, label, url, note }: Layout) {
   const safeUrl = escapeHtml(url);
   return `<!doctype html>
 <html><body style="margin:0;padding:24px;background:#faf9f7;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c1b19">
@@ -36,13 +38,13 @@ export function verificationEmail(user: Recipient, url: string): Mail {
     to: user.email,
     subject: "Verify your email",
     text: `Hi ${user.name},\n\nConfirm your email to finish creating your account:\n${url}\n\nThe link expires in 24 hours. If this wasn't you, ignore this message.`,
-    html: layout(
-      "Verify your email",
-      `Hi ${user.name}, confirm your email to finish creating your account.`,
-      "Verify email",
+    html: layout({
+      heading: "Verify your email",
+      intro: `Hi ${user.name}, confirm your email to finish creating your account.`,
+      label: "Verify email",
       url,
-      "The link expires in 24 hours. If this wasn't you, ignore this message.",
-    ),
+      note: "The link expires in 24 hours. If this wasn't you, ignore this message.",
+    }),
   };
 }
 
@@ -51,12 +53,12 @@ export function resetPasswordEmail(user: Recipient, url: string): Mail {
     to: user.email,
     subject: "Reset your password",
     text: `Hi ${user.name},\n\nSet a new password:\n${url}\n\nThe link works once and expires in 30 minutes. If this wasn't you, ignore this message and your password stays the same.`,
-    html: layout(
-      "Reset your password",
-      `Hi ${user.name}, use the button below to set a new password.`,
-      "Reset password",
+    html: layout({
+      heading: "Reset your password",
+      intro: `Hi ${user.name}, use the button below to set a new password.`,
+      label: "Reset password",
       url,
-      "The link works once and expires in 30 minutes. If this wasn't you, ignore this message.",
-    ),
+      note: "The link works once and expires in 30 minutes. If this wasn't you, ignore this message.",
+    }),
   };
 }
