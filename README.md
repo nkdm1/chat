@@ -151,7 +151,7 @@ They are local stand-ins for Azure, used through the same Azure SDKs:
 pnpm check        # Biome (formatting, imports)
 pnpm lint         # oxlint (type-aware)
 pnpm typecheck
-pnpm test         # needs: docker compose up -d db redis azurite (cosmos optional)
+pnpm test         # needs: docker compose up -d db azurite
 ```
 
 Tests use a separate `chat_test` database, so they don't touch your local data.

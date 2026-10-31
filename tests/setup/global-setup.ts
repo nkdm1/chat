@@ -16,9 +16,16 @@ export default async function setup() {
 
   const adminUrl = new URL(url);
   adminUrl.pathname = "/postgres";
-  const admin = postgres(adminUrl.toString(), { max: 1 });
+  const admin = postgres(adminUrl.toString(), { max: 1, connect_timeout: 5 });
   const exists =
-    await admin`select 1 from pg_database where datname = ${dbName}`;
+    await admin`select 1 from pg_database where datname = ${dbName}`.catch(
+      (error: unknown) => {
+        throw new Error(
+          `Can't reach PostgreSQL at ${url.host}. Start it with: docker compose up -d db`,
+          { cause: error },
+        );
+      },
+    );
   if (exists.length === 0) {
     await admin.unsafe(`create database "${dbName}"`);
   }
