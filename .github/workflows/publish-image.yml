@@ -1,0 +1,58 @@
+name: Publish image
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Authenticate to ACR
+        run: az acr login --name websecchatacr
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and publish application image
+        id: app
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: true
+          tags: websecchatacr.azurecr.io/chat:${{ github.event.workflow_run.head_sha }}
+      - name: Build and publish migration image
+        id: migrator
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrator
+          push: true
+          tags: websecchatacr.azurecr.io/chat-migrator:${{ github.event.workflow_run.head_sha }}
+      - name: Record immutable image references
+        env:
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          MIGRATOR_DIGEST: ${{ steps.migrator.outputs.digest }}
+        run: |
+          {
+            echo 'Application: `websecchatacr.azurecr.io/chat@'"${APP_DIGEST}"'`'
+            echo 'Migrator: `websecchatacr.azurecr.io/chat-migrator@'"${MIGRATOR_DIGEST}"'`'
+          } >> "$GITHUB_STEP_SUMMARY"
